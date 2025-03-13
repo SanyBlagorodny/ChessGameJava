@@ -1,59 +1,95 @@
 public class ChessBoard {
-    public ChessPiece[][] board = new ChessPiece[8][8]; // Двумерный массив для хранения шахматных фигур
-    String nowPlayer; // Переменная для отслеживания текущего игрока
+    public ChessPiece[][] board = new ChessPiece[8][8];
+    String nowPlayer;
 
     public ChessBoard(String nowPlayer) {
-        this.nowPlayer = nowPlayer; // Устанавливаем, кто ходит первым (обычно "White")
+        this.nowPlayer = nowPlayer;
     }
 
     public boolean moveToPosition(int startLine, int startColumn, int endLine, int endColumn) {
-        // Проверяем, что координаты находятся в допустимых границах (0-7)
         if (!checkPos(startLine) || !checkPos(startColumn) || !checkPos(endLine) || !checkPos(endColumn)) {
             return false;
         }
 
-        ChessPiece piece = board[startLine][startColumn]; // Получаем фигуру с начальной позиции
+        ChessPiece piece = board[startLine][startColumn];
         if (piece == null) {
             System.out.println("Выбранная клетка пуста.");
             return false;
         }
 
-        // Вывод информации о фигуре для отладки
         System.out.println("Фигура: " + piece.getSymbol() + ", Цвет: " + piece.getColor());
 
-        // Проверяем, что ходит именно тот игрок, чья сейчас очередь
         if (!nowPlayer.equals(piece.getColor())) {
-            System.out.println("Сейчас ходят " + nowPlayer + ". Нельзя двигать чужие фигуры!");
+            System.out.println("Сейчас ходит " + nowPlayer + ". Нельзя двигать чужие фигуры!");
             return false;
         }
 
-        // Проверяем, может ли фигура сделать такой ход
         if (!piece.canMoveToPosition(this, startLine, startColumn, endLine, endColumn)) {
             return false;
         }
 
-        // Проверяем, не стоит ли на целевой клетке фигура того же цвета
         ChessPiece targetPiece = board[endLine][endColumn];
         if (targetPiece != null && targetPiece.getColor().equals(piece.getColor())) {
             return false;
         }
 
-        // Выводим информацию о перемещении фигуры
         System.out.println("Перемещаем " + piece.getSymbol() + " с " + (char) ('a' + startColumn) + (8 - startLine) +
                 " на " + (char) ('a' + endColumn) + (8 - endLine));
 
-        // Перемещаем фигуру
         board[endLine][endColumn] = piece;
         board[startLine][startColumn] = null;
 
-        // Меняем ход игрока
+        if (piece instanceof King) {
+            ((King) piece).setMoved();
+        } else if (piece instanceof Rook) {
+            ((Rook) piece).setMoved();
+        }
+
         nowPlayer = nowPlayer.equals("White") ? "Black" : "White";
         System.out.println("Следующий ход: " + nowPlayer);
         return true;
     }
 
+    public boolean castling(boolean kingside) {
+        int row = nowPlayer.equals("White") ? 0 : 7;
+        int kingCol = 4;
+        int rookCol = kingside ? 7 : 0;
+        int kingNewCol = kingside ? 6 : 2;
+        int rookNewCol = kingside ? 5 : 3;
+
+        if (!(board[row][kingCol] instanceof King king) || king.hasMoved()) {
+            System.out.println("Рокировка невозможна: король уже двигался.");
+            return false;
+        }
+
+        if (!(board[row][rookCol] instanceof Rook rook) || rook.hasMoved()) {
+            System.out.println("Рокировка невозможна: ладья уже двигалась.");
+            return false;
+        }
+
+        int step = kingside ? 1 : -1;
+        for (int i = kingCol + step; i != rookCol; i += step) {
+            if (board[row][i] != null) {
+                System.out.println("Рокировка невозможна: между королем и ладьей есть фигуры.");
+                return false;
+            }
+        }
+
+        board[row][kingCol] = null;
+        board[row][rookCol] = null;
+        board[row][kingNewCol] = king;
+        board[row][rookNewCol] = rook;
+
+        king.setMoved();
+        rook.setMoved();
+
+        nowPlayer = nowPlayer.equals("White") ? "Black" : "White";
+        System.out.println("Рокировка выполнена.");
+        return true;
+    }
+
     public boolean checkPos(int pos) {
-        return pos >= 0 && pos <= 7; // Проверка, что координата в пределах доски
+        return pos >= 0 && pos <= 7;
     }
 
     public void printBoard() {
@@ -62,25 +98,21 @@ public class ChessBoard {
         System.out.println("Player 2 (Black)");
         System.out.println();
 
-        // Вывод координатных обозначений
         System.out.println("    a     b    c    d    e    f    g    h");
         System.out.println("  ┌────┬────┬────┬────┬────┬────┬────┬────┐");
 
-        // Вывод доски построчно
         for (int i = 7; i >= 0; i--) {
             System.out.print((i + 1) + " ");
             for (int j = 0; j < 8; j++) {
                 System.out.print("│ ");
                 ChessPiece piece = board[i][j];
                 if (piece == null) {
-                    // Отображение черных и белых клеток
                     if ((i + j) % 2 == 0) {
                         System.out.print("  ");
                     } else {
                         System.out.print("██");
                     }
                 } else {
-                    // Вывод символа фигуры с указанием ее цвета
                     String colorSymbol = piece.getColor().substring(0, 1).toLowerCase();
                     System.out.print(piece.getSymbol() + colorSymbol);
                 }
@@ -93,7 +125,6 @@ public class ChessBoard {
             }
         }
 
-        // Вывод нижней границы доски
         System.out.println("  └────┴────┴────┴────┴────┴────┴────┴────┘");
         System.out.println("    a     b    c    d    e    f    g    h");
         System.out.println();

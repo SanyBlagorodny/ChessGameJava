@@ -38,6 +38,8 @@ public class Main {
                 Чтобы проверить игру, вводите команды:
                 'exit' - выход
                 'replay' - перезапуск игры
+                'castling kingside' - короткая рокировка
+                'castling queenside' - длинная рокировка
                 'move a2 a4' - перемещение фигуры
                 """);
 
@@ -66,7 +68,6 @@ public class Main {
 
                     ChessPiece piece = board.board[startLine][startColumn];
 
-                    // Проверяем, что игрок не ходит за чужую фигуру
                     if (piece == null || !piece.getColor().equals(board.nowPlayer)) {
                         System.out.println("Сейчас ход " + board.nowPlayer + ". Нельзя двигать чужие фигуры!");
                         continue;
@@ -80,6 +81,13 @@ public class Main {
                     }
                 } catch (Exception e) {
                     System.out.println("Ошибка: " + e.getMessage());
+                }
+            } else if (s.startsWith("castling")) {
+                if (board.castling(s.equals("castling kingside"))) {
+                    System.out.println("Рокировка выполнена.");
+                    board.printBoard();
+                } else {
+                    System.out.println("Рокировка невозможна.");
                 }
             } else {
                 System.out.println("Неизвестная команда.");

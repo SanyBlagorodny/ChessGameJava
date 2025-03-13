@@ -1,4 +1,5 @@
 public class Rook extends ChessPiece {
+    private boolean hasMoved = false;
 
     public Rook(String color) {
         super(color);
@@ -12,23 +13,31 @@ public class Rook extends ChessPiece {
     @Override
     public boolean canMoveToPosition(ChessBoard chessBoard, int line, int column, int toLine, int toColumn) {
         if (!checkPos(line) || !checkPos(column) || !checkPos(toLine) || !checkPos(toColumn)) {
-            return false; // Ход должен быть в пределах доски
+            return false;
         }
 
         if (line == toLine && column == toColumn) {
-            return false; // Ладья не может оставаться на месте
+            return false;
         }
 
         if (line == toLine || column == toColumn) {
             return isPathClear(chessBoard, line, column, toLine, toColumn);
         }
 
-        return false; // Ладья двигается только по прямым
+        return false;
     }
 
     @Override
     public String getSymbol() {
         return "R";
+    }
+
+    public boolean hasMoved() {
+        return hasMoved;
+    }
+
+    public void setMoved() {
+        this.hasMoved = true;
     }
 
     private boolean isPathClear(ChessBoard chessBoard, int line, int column, int toLine, int toColumn) {
@@ -40,13 +49,12 @@ public class Rook extends ChessPiece {
 
         while (currentLine != toLine || currentColumn != toColumn) {
             if (chessBoard.board[currentLine][currentColumn] != null) {
-                return false; // На пути есть препятствие
+                return false;
             }
             currentLine += stepLine;
             currentColumn += stepColumn;
         }
 
-        // Проверяем конечную клетку: если там фигура, она должна быть противника
         return chessBoard.board[toLine][toColumn] == null ||
                 !chessBoard.board[toLine][toColumn].getColor().equals(this.color);
     }
